@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+  <!-- Page Header -->
+  <header class="masthead" style="background-image: url('https://images.unsplash.com/photo-1531592937781-344ad608fabf?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80')">
+    <div class="overlay"></div>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+          <!-- {% with messages = get_flashed_messages() %}
+          {% if messages %}
+          <ul class="messages">
+              {% for  message in messages %}
+              <div class="col-lg-8 col-md-10 mx-auto">
+              <p class=" alert alert-danger">{{ message }}</p>
+            </div>
+              {% endfor %}
+          </ul>
+          {% endif %}
+          {%endwith%} -->
+          <div class="page-heading">
+            <h1>Register</h1>
+            <span class="subheading">Start Contributing to the Blog!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <form action="" method="POST" novalidate>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-md-10 mx-auto">
+         {{ form.csrf_token }}
+
+       <div class="control-group">
+        <div class="form-group controls">
+          {{form.first_name.label}}
+          {{form.first_name(size=50)}} 
+          <!-- {{form.username.label}}
+          {{form.username}} -->
+          <!-- <input type="text" name="name" class="form-control" placeholder="Name" id="name" required data-validation-required-message="Please enter your name."> -->
+          <!-- <p class="help-block text-danger">{{form.first_name.errors[0]}}</p> -->
+    {% for error in form.first_name.errors %}
+        <li class="help-block text-danger">{{ error }}</li>
+    {% endfor %}
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="form-group  controls">
+          {{form.last_name.label}}
+       {{form.last_name(size=50)}}
+          <p class="help-block text-danger"></p>
+          {% for error in form.last_name.errors %}
+        <li class="help-block text-danger">{{ error }}</li>
+    {% endfor %}
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="form-group col-xs-12 controls">
+          {{form.username.label}}
+       {{form.username(size=50)}}
+          <p class="help-block text-danger"></p>
+          {% for error in form.username.errors %}
+        <li class="help-block text-danger">{{ error }}</li>
+    {% endfor %}
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="form-group  controls">
+          {{form.email.label}}
+       {{form.email(size=50)}} 
+          <p class="help-block text-danger"></p>
+          {% for error in form.email.errors %}
+        <li class="help-block text-danger">{{ error }}</li>
+    {% endfor %}
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="form-group  controls">
+          {{form.phone.label}}
+       {{form.phone()}} 
+          <p class="help-block text-danger"></p>
+          {% for error in form.phone.errors %}
+        <li class="help-block text-danger">{{ error }}</li>
+    {% endfor %}
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="form-group  controls">
+          {{form.password.label}}
+       {{form.password(size=50)}} 
+          <p class="help-block text-danger"></p>
+          {% for error in form.password.errors %}
+        <li class="help-block text-danger">{{ error }}</li>
+    {% endfor %}
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="form-group  controls">
+          {{form.confirm_password.label}}
+       {{form.confirm_password(size=50)}} 
+        </div>
+      </div>
+      <br>
+      <div id="success">
+      <button type="submit" class="btn btn-primary" id="sendMessageButton">Register</button>
+    </div>
+       
+      </div>
+    </div>
+  </div>
+  
+</form>
+
+{% endblock content %}

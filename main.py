@@ -1,47 +1,66 @@
-from flask import Flask, redirect,render_template, request,flash, url_for
-from smtplib import SMTP_SSL
-import os
+from itsdangerous import URLSafeTimedSerializer
+from flask import Flask,redirect,flash,url_for
 from dotenv import load_dotenv
+import os
+from functools import wraps
+from flask_login import current_user, login_required
+from flask_mail import Message,Mail
+
+
+
+
+
 load_dotenv()
 
 
 app=Flask(__name__)
-app.secret_key = '_5#y2L"F4Q8z\n\xec]/'
-
-@app.route('/')
-def index_page():
-    return render_template("index.html")
-
-@app.route('/about')
-def about_page():
-    return render_template('about.html')
-
-@app.route('/contact-me',methods=['GET','POST'])
-def contact_page():
-    if request.method=='POST':
-        name=request.form.get('name')
-        email=request.form.get('email')
-        phone=request.form.get('phone')
-        message=request.form.get('message')
-
-        with SMTP_SSL("smtp.gmail.com") as connection:
-            # connection.starttls()
-            connection.login(
-                    user=os.environ.get("SENDING_EMAIL"),
-                    password=os.environ.get("SENDING_EMAIL_PASSWORD"),
-                )
-            connection.sendmail(
-                from_addr=os.environ.get("SENDING_EMAIL"),
-                to_addrs=os.environ.get("RECEIVING_EMAIL"),
-                msg=f"Subject:Message from SternleyBlog"
-                f"\n\nName: {name}\nPhone: {phone}\nEmail: {email}\nMessage: {message}",
-                )
-            flash('Your message was sent successfully')
-        return redirect(url_for('contact_page'))
-    return render_template('contact.html')
+app.secret_key = os.environ.get('SECRET_KEY')
+app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///SternleyBlog.db"
+# add additional flask config setting from in the config.py
+app.config.from_object("config.Config")
+mail=Mail(app)
 
 
 
 
-if __name__=="__main__":
-    app.run(debug=True)
+# generate and confirm token function for Email confirmation
+def generate_confirmation_token(email):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    return serializer.dumps(email, salt=app.config['SECURITY_PASSWORD_SALT'])
+
+
+def confirm_token(token, expiration=3600):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    try:
+        email = serializer.loads(
+            token,
+            salt=app.config['SECURITY_PASSWORD_SALT'],
+            max_age=expiration
+        )
+    except:
+        return False
+    return email
+
+
+
+# login_required decoreator function    
+def logout_required(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        if current_user.is_authenticated:
+            flash("You are already authenticated.", "info")
+            return redirect(url_for("index_page"))
+        return func(*args, **kwargs)
+
+    return decorated_function
+
+# function to send emails
+def send_email(to, subject,**kwargs):
+    msg = Message(
+        subject,
+        recipients=[to],
+        html=kwargs.get('template'),
+        sender=app.config["MAIL_DEFAULT_SENDER"],
+        body=kwargs.get('body')
+    )
+    mail.send(msg)
