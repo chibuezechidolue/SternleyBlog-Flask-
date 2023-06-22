@@ -18,6 +18,15 @@ class LoginUserForm(FlaskForm):
     email= wtforms.StringField(validators=[DataRequired(),Email(check_deliverability=True)])
     password=wtforms.PasswordField(validators=[DataRequired()])
 
+
+class CheckEmailForm(FlaskForm):
+    email= wtforms.StringField(validators=[DataRequired(),Email(check_deliverability=True)])
+
+
+class ResetPasswordForm(FlaskForm):
+    password=wtforms.PasswordField(validators=[DataRequired()])
+    confirm_pass=wtforms.PasswordField("Confirm Password",validators=[DataRequired()])
+   
     
 
     

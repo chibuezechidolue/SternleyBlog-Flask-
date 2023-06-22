@@ -3,8 +3,8 @@ from flask import redirect,render_template, request,flash, url_for
 import os
 from dotenv import load_dotenv
 from sqlalchemy.exc import IntegrityError
-from forms import RegisterUserForm,LoginUserForm
-from werkzeug.security import check_password_hash
+from forms import RegisterUserForm,LoginUserForm,CheckEmailForm, ResetPasswordForm
+from werkzeug.security import check_password_hash,generate_password_hash
 import datetime
 from flask_login import current_user, login_required,login_user,LoginManager,logout_user
 from main import app,confirm_token,generate_confirmation_token,logout_required,send_email
@@ -18,7 +18,51 @@ load_dotenv()
 # app = Manager(app)
 # @app.command
 
+# ////////// Reset Password functionality//////
+@app.route('/reset-password',methods=['POST','GET'])
+def reset_password():
+    form=CheckEmailForm()
+    if request.method=="POST":
+        if form.validate_on_submit():
+            email=form.email.data
+            if User.query.filter_by(email=email).first():
+                token = generate_confirmation_token(email)
 
+                confirm_url = url_for('choose_password', token=token, _external=True)
+                html = render_template('user/password_link.html', confirm_url=confirm_url)
+                subject = "Reset your password"
+                send_email(to=email, subject=subject, template=html)
+                return render_template("user/password_reset_done.html")
+
+
+    return render_template("user/reset_password.html",form=form)
+@app.route('/reset-confirm/<token>',methods=["POST","GET"])
+def choose_password(token):
+    form=ResetPasswordForm()
+    try:
+        email=confirm_token(token)
+    except:
+        flash('The confirmation link is invalid or has expired.', 'danger')
+        return redirect(url_for('reset_password'))
+    if request.method=="POST":
+        user=User.query.filter_by(email=email).first()
+        password=form.password.data
+        confirm_pass=form.confirm_pass.data
+        if password==confirm_pass:
+            print('the password is a match')
+            user.password=generate_password_hash(password=password,method=os.environ.get('SECURITY_PASSWORD_SALT'),
+                                               salt_length=int(os.environ.get('SALT_ROUNDS')))
+            db.session.commit()
+            flash('Your password has been reset.', 'success')
+            return redirect(url_for('login_page'))
+        flash("passwords did not match",'danger')
+    return render_template("user/password_reset_confirm.html",form=form)
+
+# ////////// end of Reset Password functionality//////
+
+
+
+#/////// login and logout user functionality////////
 # to enable login feature
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -51,9 +95,10 @@ def login_page():
             
                 
     return render_template("user/login.html",form=form)
+#/////// end of login and logout user functionality////////
 
 
-
+#/////// register user functionality////////
 @app.route('/register-user',methods=["GET","POST"])
 def register_page():
     form=RegisterUserForm()
@@ -101,11 +146,6 @@ def register_page():
     return render_template('user/register.html',form=form)
 
 
-@app.route('/signup-success')
-def signup_success_page():
-    return render_template('user/signup-success.html')
-
-
 
 @app.route('/confirm/<token>')
 def confirm_email(token):
@@ -113,7 +153,6 @@ def confirm_email(token):
         email = confirm_token(token)
     except:
         flash('The confirmation link is invalid or has expired.', 'danger')
-    print(email)
     user = User.query.filter_by(email=email).first_or_404()
     if user.confirmed:
         flash('Account already confirmed. Please login.', 'success')
@@ -127,6 +166,12 @@ def confirm_email(token):
         flash('You have confirmed your account. Thanks!', 'success')
     return redirect(url_for('register_page'))
 
+
+@app.route('/signup-success')
+def signup_success_page():
+    return render_template('user/signup_success.html')
+
+#/////// end of register user functionality////////
 
 
 @app.route('/')
