@@ -3,10 +3,10 @@ from flask import redirect,render_template, request,flash, url_for
 import os
 from dotenv import load_dotenv
 from sqlalchemy.exc import IntegrityError
-from forms import RegisterUserForm
+from forms import RegisterUserForm,LoginUserForm
 from werkzeug.security import check_password_hash
 import datetime
-from flask_login import current_user, login_required
+from flask_login import current_user, login_required,login_user,LoginManager,logout_user
 from main import app,confirm_token,generate_confirmation_token,logout_required,send_email
 from models import User,db
 
@@ -16,18 +16,41 @@ load_dotenv()
 
 
 # app = Manager(app)
-
-
-
-
-
-    
-
-
 # @app.command
 
 
+# to enable login feature
+login_manager = LoginManager()
+login_manager.init_app(app)
 
+# to loader the logged in user
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.filter_by(id=user_id).first()
+
+@app.route("/logout")
+def logout_page():
+    logout_user()
+    return render_template('user/logout.html')
+
+@app.route('/login',methods=['POST','GET'])
+def login_page():
+    form=LoginUserForm()
+    if request.method=="POST":
+        if form.validate_on_submit:
+            email=form.email.data
+            password=form.password.data
+            try:
+                user=User.query.filter_by(email=email).first()
+                if check_password_hash(pwhash=user.password,password=password):
+                    login_user(user,duration=180)
+                    return redirect(url_for('index_page'))
+            except:
+                flash("wrong email, plese try another","danger")
+            flash("your password is not correct ","danger")
+            
+                
+    return render_template("user/login.html",form=form)
 
 
 
@@ -136,7 +159,7 @@ def contact_page():
         #         )
         msg=f"\n\nName: {name}\nPhone: {phone}\nEmail: {email}\nMessage: {message}"
         send_email(to=os.environ.get("RECEIVING_EMAIL"),body=msg,subject="Message from SternleyBlog")
-        flash('Your message was sent successfully')
+        flash('Your message was sent successfully', 'success')
         return redirect(url_for('contact_page'))
     return render_template('blog/contact.html')
 

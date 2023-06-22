@@ -1,3 +1,4 @@
+from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 import os
 from main import app
@@ -7,7 +8,7 @@ import datetime
 db = SQLAlchemy(app)
 
 
-class User(db.Model):
+class User(UserMixin,db.Model):
     __tablename__= "Blog users"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True, nullable=False)
@@ -32,8 +33,8 @@ class User(db.Model):
         self.admin = admin
         self.confirmed = confirmed
         self.confirmed_on = confirmed_on
-        self.first_name=first_name
-        self.last_name=last_name
+        self.first_name=first_name.title()
+        self.last_name=last_name.title()
         self.phone=phone
         self.username=username
         self.paid=paid

@@ -13,4 +13,11 @@ class RegisterUserForm(FlaskForm):
     confirm_password=wtforms.PasswordField("Confirm Password",validators=[DataRequired()])
     submit=wtforms.SubmitField('Register')
 
+
+class LoginUserForm(FlaskForm):
+    email= wtforms.StringField(validators=[DataRequired(),Email(check_deliverability=True)])
+    password=wtforms.PasswordField(validators=[DataRequired()])
+
+    
+
     
