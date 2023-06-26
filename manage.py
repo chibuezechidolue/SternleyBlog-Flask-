@@ -1,14 +1,18 @@
 from sqlite3 import IntegrityError
+from tkinter import Variable
+from turtle import title
 from flask import redirect,render_template, request,flash, url_for
 import os
 from dotenv import load_dotenv
 from sqlalchemy.exc import IntegrityError
-from forms import RegisterUserForm,LoginUserForm,CheckEmailForm, ResetPasswordForm
+from forms import CommentForm, CreatePostForm, RegisterUserForm,LoginUserForm,CheckEmailForm, ResetPasswordForm
 from werkzeug.security import check_password_hash,generate_password_hash
 import datetime
 from flask_login import current_user, login_required,login_user,LoginManager,logout_user
 from main import app,confirm_token,generate_confirmation_token,logout_required,send_email
-from models import User,db
+from models import BlogPost, Comment, User,db
+import datetime
+
 
 
 # from flask_script import Manager
@@ -17,6 +21,70 @@ load_dotenv()
 
 # app = Manager(app)
 # @app.command
+
+# /////////// CRUD functionality for Posts//////////
+@app.route('/confirm-delete/<post_id>',methods=["POST","GET"])
+def delete_post(post_id):
+    post=BlogPost.query.filter_by(id=post_id).first()
+    if current_user==post.author:
+        if request.method=="POST":
+            db.session.delete(post)
+            db.session.commit()
+            return redirect(url_for('index_page'))
+    else:
+        return "You are not Permitted",403
+        
+    return render_template("blog/confirm_delete.html",post_id=post_id)
+
+
+@app.route("/view-post/<post_id>",methods=["GET","POST"])
+def view_post(post_id):
+    post=BlogPost.query.filter_by(id=post_id).first()
+    form=CommentForm()
+    # all_comment=db.session.query(Comment).all()
+    if request.method=="POST" and form.validate_on_submit:
+        text=form.comment.data
+        comment=Comment(text=text,post_id=post_id)
+        with app.app_context():
+            db.session.add(comment)
+            db.session.commit()
+            return redirect(url_for('view_post',post_id=post_id))
+    return render_template('blog/post.html',post=post,form=form)
+
+
+
+@app.route('/edit-post/<post_id>',methods=["POST","GET"])
+def edit_post(post_id):
+    post = BlogPost.query.filter_by(id=post_id).first()
+    form=CreatePostForm(title=post.title,subtitle=post.subtitle,img_url=post.img_url,content=post.content)
+    if request.method=='POST':
+        if form.validate_on_submit:
+            post.title=form.title.data
+            post.subtitle=form.subtitle.data
+            post.img_url=form.img_url.data
+            post.content=form.content.data
+            db.session.commit()
+            return redirect(url_for('index_page'))
+
+    return render_template("blog/make_post.html",form=form,is_edit=True)
+
+
+@app.route('/create-post',methods=["POST","GET"])
+def create_post():
+    form=CreatePostForm()
+    if request.method=="POST":
+        if form.validate_on_submit():
+            new_post=BlogPost(title=form.title.data,subtitle=form.subtitle.data,img_url=form.img_url.data,
+                              content=form.content.data,date=datetime.date.today(),
+                              author_id=current_user.id)
+            with app.app_context():
+                db.session.add(new_post)
+                db.session.commit()
+                return redirect(url_for('index_page'))
+    return render_template('blog/make_post.html',form=form)
+# /////////// end of CRUD functionality for Posts//////////
+
+
 
 # ////////// Reset Password functionality//////
 @app.route('/reset-password',methods=['POST','GET'])
@@ -87,7 +155,8 @@ def login_page():
             try:
                 user=User.query.filter_by(email=email).first()
                 if check_password_hash(pwhash=user.password,password=password):
-                    login_user(user,duration=180)
+                    login_user(user)
+                    
                     return redirect(url_for('index_page'))
             except:
                 flash("wrong email, plese try another","danger")
@@ -176,7 +245,8 @@ def signup_success_page():
 
 @app.route('/')
 def index_page():
-    return render_template("blog/index.html")
+    posts = db.session.query(BlogPost).all()
+    return render_template("blog/index.html",all_post=posts)
 
 @app.route('/about')
 def about_page():

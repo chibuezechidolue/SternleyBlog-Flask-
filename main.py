@@ -5,6 +5,7 @@ import os
 from functools import wraps
 from flask_login import current_user, login_required
 from flask_mail import Message,Mail
+from flask_bootstrap import Bootstrap
 
 
 
@@ -19,6 +20,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///SternleyBlog.db"
 # add additional flask config setting from in the config.py
 app.config.from_object("config.Config")
 mail=Mail(app)
+Bootstrap(app)
 
 
 

@@ -23,7 +23,7 @@
       <div class="col-lg-8 col-md-10 mx-auto">
         {% for post in all_post %}
         <div class="post-preview">
-          <a href="">
+          <a href="{{url_for('view_post',post_id=post.id)}}">
             <h2 class="post-title">
               {{post.title}}
             </h2>
@@ -34,8 +34,8 @@
           <p class="post-meta">Posted by
             <a href="">{{post.author.first_name}}</a>
             on {{post.date}}
-            {%if user.id == post.author.id %}
-            <a href="">✘</a> <a class="btn " href="">Edit</a>
+            {%if current_user.id == post.author.id %}
+            <a href="{{url_for('delete_post',post_id=post.id)}}">✘</a> <a class="btn " href="{{url_for('edit_post',post_id=post.id)}}">Edit</a>
             {%endif%}
           
             
@@ -46,9 +46,9 @@
 
 
         <!-- New Post -->
-        {%if user%}
+        {%if current_user%}
         <div class="clearfix">
-          <a class="btn btn-primary float-right" href="">Create New Post</a>
+          <a class="btn btn-primary float-right" href="{{url_for('create_post')}}">Create New Post</a>
         </div>
         {%endif%}
       </div>

@@ -3,6 +3,19 @@ import wtforms
 from wtforms.validators import DataRequired,Email
 
 
+class CommentForm(FlaskForm):
+    comment=wtforms.TextAreaField(validators=[DataRequired()])
+
+    
+
+class CreatePostForm(FlaskForm):
+    title=wtforms.StringField( validators=[DataRequired()])
+    subtitle=wtforms.StringField( validators=[DataRequired()])
+    img_url=wtforms.URLField( "Image url",validators=[DataRequired()])
+    content=wtforms.TextAreaField(validators=[DataRequired()])
+
+    
+
 class RegisterUserForm(FlaskForm):
     username = wtforms.StringField('Username', validators=[DataRequired()])
     email= wtforms.StringField(validators=[DataRequired(),Email(check_deliverability=True)])
@@ -27,6 +40,4 @@ class ResetPasswordForm(FlaskForm):
     password=wtforms.PasswordField(validators=[DataRequired()])
     confirm_pass=wtforms.PasswordField("Confirm Password",validators=[DataRequired()])
    
-    
-
     

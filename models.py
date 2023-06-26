@@ -7,6 +7,44 @@ import datetime
 
 db = SQLAlchemy(app)
 
+def migrate():
+    with app.app_context():
+        db.create_all()
+
+
+class Comment(db.Model):
+    __tablename__ = "comments"
+    id= db.Column(db.Integer, primary_key=True)
+    text=db.Column(db.String(250), nullable=False)
+    # ///// one to many ralatioship (post to comments)////
+    post=db.relationship("BlogPost",back_populates='comments')
+    post_id=db.Column(db.Integer, db.ForeignKey('Blog Posts.id'))
+
+    # ///// one to many ralatioship (user to comments)////
+    author=db.relationship("User",back_populates='comments')
+    author_id=db.Column(db.Integer, db.ForeignKey('Blog users.id'))
+
+
+
+
+
+class BlogPost(db.Model):
+    __tablename__="Blog Posts"
+    id = db.Column(db.Integer, primary_key=True)
+    title=db.Column(db.String,nullable=False)
+    subtitle=db.Column(db.String,nullable=False)
+    img_url=db.Column(db.String,nullable=False)
+    date=db.Column(db.String,nullable=False)
+    content=db.Column(db.Text,nullable=False)
+    # ///// one to many ralatioship (posts to User)////
+    author=db.relationship("User",back_populates="posts",)
+    author_id=db.Column(db.Integer,db.ForeignKey('Blog users.id'))
+    
+    # ///// one to many ralatioship (post to comments)////
+    comments=db.relationship("Comment",back_populates='post')
+
+
+
 
 class User(UserMixin,db.Model):
     __tablename__= "Blog users"
@@ -22,6 +60,12 @@ class User(UserMixin,db.Model):
     confirmed = db.Column(db.Boolean, nullable=False, default=False)
     confirmed_on = db.Column(db.DateTime, nullable=True,)
     paid=db.Column(db.Boolean,nullable=False,default=False)
+    # ///// one to many ralatioship (posts to User)////
+    posts=db.relationship("BlogPost",back_populates="author")
+    
+    # ///// one to many ralatioship (user to comments)////
+    comments=db.relationship("Comment",back_populates='author')
+
 
     def __init__(self, email, password, confirmed,first_name,last_name,phone,username,
                  paid=False, admin=False, confirmed_on=None):
@@ -43,8 +87,6 @@ class User(UserMixin,db.Model):
         return self.username
 
 
-def migrate():
-    with app.app_context():
-        db.create_all()
+
 
 migrate()
