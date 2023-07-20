@@ -1,0 +1,38 @@
+{%extends 'base.html'%}
+{%block title%} 
+{{user.username}}'s Profile  
+{%endblock title%}
+
+{%block content%}
+<body class="specific">
+<div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+<div>
+	<img class="prof_pic" src="% static user.profile.image.url" alt="profile pic">
+</div>
+<br>
+<div>
+	Name: {{current_user.first_name}} {{current_user.last_name}} 
+</div>
+<br>
+
+<div>
+	Email: {{current_user.email}}
+</div>
+<br>
+
+<div>
+	Phone: +234{{current_user.phone}}
+</div>
+<br>
+
+<div>
+	Bio: {{current_user.bio}}
+</div>
+<br>
+<div>
+	<a class="btn btn-primary" href="">edit profile</a>
+</div>
+        </div></div></div></body>
+{%endblock content%}
