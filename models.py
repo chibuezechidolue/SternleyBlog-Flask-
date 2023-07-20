@@ -12,6 +12,15 @@ def migrate():
         db.create_all()
 
 
+
+
+class UserProfile(db.Model):
+    id= db.Column(db.Integer, primary_key=True)
+    bio=db.Column(db.Text,nullable=True)
+    user=db.relationship("User",back_populates='profile')
+    user_id=db.Column(db.Integer, db.ForeignKey("Blog users.id"))
+
+    
 class Comment(db.Model):
     __tablename__ = "comments"
     id= db.Column(db.Integer, primary_key=True)
@@ -65,6 +74,11 @@ class User(UserMixin,db.Model):
     
     # ///// one to many ralatioship (user to comments)////
     comments=db.relationship("Comment",back_populates='author')
+    
+    # ///// one to many ralatioship (user to profile)////
+    profile=db.relationship("UserProfile",back_populates='user')
+
+
 
 
     def __init__(self, email, password, confirmed,first_name,last_name,phone,username,
@@ -82,6 +96,7 @@ class User(UserMixin,db.Model):
         self.phone=phone
         self.username=username
         self.paid=paid
+        
 
     def __str__(self):
         return self.username

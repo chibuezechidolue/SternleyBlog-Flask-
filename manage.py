@@ -1,6 +1,4 @@
 from sqlite3 import IntegrityError
-from tkinter import Variable
-from turtle import title
 from flask import redirect,render_template, request,flash, url_for
 import os
 from dotenv import load_dotenv
@@ -10,8 +8,10 @@ from werkzeug.security import check_password_hash,generate_password_hash
 import datetime
 from flask_login import current_user, login_required,login_user,LoginManager,logout_user
 from main import app,confirm_token,generate_confirmation_token,logout_required,send_email
-from models import BlogPost, Comment, User,db
+from models import BlogPost, Comment, User, UserProfile,db
 import datetime
+
+
 
 
 
@@ -22,8 +22,21 @@ load_dotenv()
 # app = Manager(app)
 # @app.command
 
+
+
+
+# ///////// profile page functionalities/////
+@app.route('/profile-page')
+def profile_page():
+    return render_template('user/profile.html')
+
+# ///////// end profile page functionalities/////
+
+
+
 # /////////// CRUD functionality for Posts//////////
 @app.route('/confirm-delete/<post_id>',methods=["POST","GET"])
+@login_required
 def delete_post(post_id):
     post=BlogPost.query.filter_by(id=post_id).first()
     if current_user==post.author:
@@ -44,7 +57,7 @@ def view_post(post_id):
     # all_comment=db.session.query(Comment).all()
     if request.method=="POST" and form.validate_on_submit:
         text=form.comment.data
-        comment=Comment(text=text,post_id=post_id)
+        comment=Comment(text=text,post_id=post_id,author=current_user)
         with app.app_context():
             db.session.add(comment)
             db.session.commit()
@@ -54,6 +67,7 @@ def view_post(post_id):
 
 
 @app.route('/edit-post/<post_id>',methods=["POST","GET"])
+@login_required
 def edit_post(post_id):
     post = BlogPost.query.filter_by(id=post_id).first()
     form=CreatePostForm(title=post.title,subtitle=post.subtitle,img_url=post.img_url,content=post.content)
@@ -195,9 +209,14 @@ def register_page():
             try:
                 new_user=User(username=username,email=email,phone=phone,first_name=first_name,
                           last_name=last_name,password=accepted_password,confirmed=False)
+                new_user_profile=UserProfile(user=new_user)
                 with app.app_context():
                     db.session.add(new_user)
                     db.session.commit()
+                    db.session.add(new_user_profile)
+                    db.session.commit()
+
+                    
                     token = generate_confirmation_token(new_user.email)
 
                     confirm_url = url_for('confirm_email', token=token, _external=True)
@@ -205,7 +224,7 @@ def register_page():
                     subject = "Please confirm your email"
                     send_email(to=new_user.email, subject=subject, template=html)
 
-                    # login_user(user)
+                # login_user(user)
 
                     flash('A confirmation email has been sent via email.', 'success')
                 return redirect(url_for('signup_success_page'))

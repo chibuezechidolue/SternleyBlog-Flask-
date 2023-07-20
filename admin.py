@@ -16,7 +16,7 @@ def create_admin():
         email=email,
         password=password,
         username='admin',
-        phone=2345666,
+        phone=123,
         paid=True,
         admin=True,
         confirmed=True,

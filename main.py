@@ -6,6 +6,7 @@ from functools import wraps
 from flask_login import current_user, login_required
 from flask_mail import Message,Mail
 from flask_bootstrap import Bootstrap
+from flask import abort
 
 
 
@@ -44,6 +45,17 @@ def confirm_token(token, expiration=3600):
     return email
 
 
+
+
+# //////admin only decorator/////
+
+def admin_only(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.id != 1:
+            return abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
 
 # login_required decoreator function    
 def logout_required(func):
